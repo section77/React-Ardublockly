@@ -15,8 +15,9 @@ const SerialMonitor = () => {
 
   const connectPort = async () => {
     try {
-      const port = await navigator.serial.requestPort();
-
+      const filters = [{ usbVendorId: 0x04d8, usbProductId: 0xef67 }];
+      const port = await navigator.serial.requestPort({ filters });
+      const { usbProductId, usbVendorId } = port.getInfo();
       await port.open({ baudRate: 115200 });
 
       while (port.readable && keepReading) {
