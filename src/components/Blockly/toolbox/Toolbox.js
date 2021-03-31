@@ -533,6 +533,10 @@ class Toolbox extends React.Component {
           colour={getColour().procedures}
           custom="PROCEDURE"
         ></Category>
+        <Category name={Blockly.Msg.toolbox_serial} colour={getColour().serial}>
+          <Block type="init_serial_monitor"></Block>
+          <Block type="print_serial_monitor"></Block>
+        </Category>
         <sep></sep>
         <Category name={Blockly.Msg.toolbox_io} colour={getColour().io}>
           <Block type="io_digitalwrite"></Block>

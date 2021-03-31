@@ -9,6 +9,7 @@ import "./sensebox-lora";
 import "./sensebox-led";
 import "./sensebox-sd";
 import "./sensebox";
+import "./serial";
 import "./mqtt";
 import "./logic";
 import "./text";
