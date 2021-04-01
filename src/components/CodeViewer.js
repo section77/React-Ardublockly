@@ -74,6 +74,14 @@ class CodeViewer extends Component {
     } else {
       this.setState({ serial: false });
     }
+
+    navigator.serial.addEventListener("connect", (event) => {
+      // TODO: Automatically open event.target or warn user a port is available.
+    });
+
+    navigator.serial.addEventListener("disconnect", (event) => {
+      // TODO: Remove |event.target| from the UI.
+    });
   }
 
   componentDidUpdate(props, state) {

@@ -4,59 +4,121 @@ import { useState } from "react";
 import Button from "@material-ui/core/Button";
 import Checkbox from "@material-ui/core/Checkbox";
 import FormControlLabel from "@material-ui/core/FormControlLabel";
+import HighchartsReact from "highcharts-react-official";
+import Highcharts from "highcharts";
+import Switch from "@material-ui/core/Switch";
 
 const SerialMonitor = () => {
   const [serialPortContent, setSerialPortContent] = useState([]);
   const [checked, setChecked] = useState(false);
   const [keepReading, setkeepReading] = useState(true);
+  const [reader, setReader] = useState();
+  const [hoverData, setHoverData] = useState(null);
+  const [switched, setSwitched] = useState(false);
+  const [chartOptions, setChartOptions] = useState({
+    title: {
+      text: "Serial Output",
+    },
+    xAxis: {
+      categories: ["A", "B", "C"],
+    },
+    series: [
+      {
+        type: "line",
+        name: "Serial1",
+        data: [1, 2, 3],
+      },
+    ],
+    plotOptions: {
+      series: {
+        point: {
+          events: {
+            mouseOver(e) {
+              setHoverData(e.target.category);
+            },
+          },
+        },
+      },
+    },
+  });
+
   const handleClick = () => setChecked(!checked);
 
-  const closePort = () => setkeepReading(!keepReading);
+  const handleSwitch = () => setSwitched(!switched);
+
+  const closePort = async () => {
+    setkeepReading(false);
+    reader.cancel();
+    await connectPort;
+  };
 
   const connectPort = async () => {
-    try {
-      const filters = [{ usbVendorId: 0x04d8, usbProductId: 0xef67 }];
-      const port = await navigator.serial.requestPort({ filters });
-      const { usbProductId, usbVendorId } = port.getInfo();
-      await port.open({ baudRate: 115200 });
+    var dataArray = [];
+    var timeArray = [];
+    // try {
+    const filters = [{ usbVendorId: 0x04d8, usbProductId: 0xef67 }];
+    const port = await navigator.serial.requestPort({ filters });
+    setkeepReading(true);
+    const { usbProductId, usbVendorId } = port.getInfo();
+    await port.open({ baudRate: 115200 });
+    while (port.readable && keepReading) {
+      const textDecoder = new window.TextDecoderStream();
+      const readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+      const reader = textDecoder.readable.getReader();
 
-      while (port.readable && keepReading) {
-        const reader = port.readable.getReader();
-
-        try {
-          while (true) {
-            const { value, done } = await reader.read();
-            if (done) {
-              // Allow the serial port to be closed later.
-              //reader.releaseLock();
-              break;
-            }
-            if (value) {
-              //   byte array to string: https://stackoverflow.com/a/37542820
-              const text = String.fromCharCode.apply(null, value);
-              console.log(text);
-              setSerialPortContent((prevContent) => [
-                ...prevContent,
-                [new Date(), text],
-              ]);
-            }
+      //const reader = port.readable.getReader();
+      setReader(reader);
+      try {
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) {
+            // Allow the serial port to be closed later.
+            reader.releaseLock();
+            break;
           }
-        } catch (error) {
-          setSerialPortContent((prevContent) => [
-            ...prevContent,
-            [new Date(), error],
-          ]);
-        } finally {
-          reader.releaseLock();
+          if (value) {
+            //   byte array to string: https://stackoverflow.com/a/37542820
+            // const text = String.fromCharCode.apply(null, value);
+            dataArray.push(Number(value));
+            timeArray.push(new Date().getTime());
+            console.log(dataArray);
+            //console.log(text);
+
+            setChartOptions({
+              xAxis: {
+                categories: timeArray,
+              },
+              series: [
+                {
+                  type: "line",
+                  data: dataArray,
+                },
+              ],
+            });
+            setSerialPortContent((prevContent) => [
+              ...prevContent,
+              [new Date(), value],
+            ]);
+          }
         }
-        await port.close();
+      } catch (error) {
+        setSerialPortContent((prevContent) => [
+          ...prevContent,
+          [new Date(), error],
+        ]);
+      } finally {
+        reader.releaseLock();
       }
-    } catch (error) {
-      setSerialPortContent((prevContent) => [
-        ...prevContent,
-        [new Date(), error],
-      ]);
     }
+    await port.close();
+    //}
+
+    // catch (error) {
+    //   setSerialPortContent((prevContent) => [
+    //     ...prevContent,
+    //     [new Date(), error],
+    //   ]);
+    // }
   };
 
   return (
@@ -105,21 +167,35 @@ const SerialMonitor = () => {
           }
           label="Show Timestamps"
         />
-        <div style={{ width: "100%", height: "48vH", overflow: "auto" }}>
-          {serialPortContent.map((log) => {
-            return (
-              <p>
-                {checked && `${log[0].toISOString()}  -> `}
-                {log[1]}
-              </p>
-            );
-          })}
-        </div>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={switched}
+              onChange={handleSwitch}
+              name="switch"
+              color="primary"
+              inputProps={{ "aria-label": "secondary checkbox" }}
+            />
+          }
+          label="Plot Data"
+        />
+        {switched ? (
+          <div style={{ width: "100%", height: "48vH", overflow: "auto" }}>
+            <HighchartsReact highcharts={Highcharts} options={chartOptions} />
+          </div>
+        ) : (
+          <div style={{ width: "100%", height: "48vH", overflow: "auto" }}>
+            {serialPortContent.map((log) => {
+              return (
+                <p>
+                  {checked && `${log[0].toISOString()}  -> `}
+                  {log[1]}
+                </p>
+              );
+            })}
+          </div>
+        )}
       </div>
-      {/* <iframe
-              className="w-full h-full"
-              src="https://googlechromelabs.github.io/serial-terminal/"
-            ></iframe> */}
     </>
   );
 };

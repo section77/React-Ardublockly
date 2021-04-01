@@ -1,6 +1,5 @@
 import * as Blockly from "blockly/core";
 import { getColour } from "../helpers/colour";
-import * as Types from "../helpers/types";
 import { selectedBoard } from "../helpers/board";
 
 Blockly.Blocks["init_serial_monitor"] = {
