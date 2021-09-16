@@ -20,6 +20,9 @@ import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";
 import Dialog from "../Dialog";
 import Button from "@material-ui/core/Button";
+import { initialXml } from "../Blockly/initialXml";
+import {diffAsXml} from 'diff-js-xml';
+
 
 const styles = (theme) => ({
   link: {
@@ -130,11 +133,30 @@ class ProjectHome extends Component {
                         }}
                       >
                         <div
-                          onClick={() => {
-                            console.log(this.props.workspaceCode.arduino);
-                            const showDialog =
-                              this.props.workspaceCode.arduino !==
-                              "void setup() { } void loop() { } ";
+                          onClick={async () => {
+                            const isCodeDifferent = new Promise((resolve) => {
+                              // resolve successfully when there is no existing workspace XML code
+                              if(!this.props.workspaceCode.xml) {
+                                resolve(false)
+                                return
+                              }
+
+                              // get difference of XML
+                              // TODO: check if code of project is different to workspace code
+                              diffAsXml(
+                                this.props.workspaceCode.xml,
+                                initialXml,
+                                undefined,
+                                undefined,
+                                (result) => {
+                                  resolve(result.length !== 0);
+                                }
+                              )
+                            }
+                            );
+
+                            const showDialog = await isCodeDifferent;
+
                             if (showDialog)
                               this.setState({
                                 dialog: true,
@@ -232,10 +254,10 @@ class ProjectHome extends Component {
               <Button
                 onClick={() => {
                   this.setState({ dialog: false });
+                  // TODO: navigate to project 
                 }}
-                color="secondary"
               >
-                Schließen
+                Verwerfen
               </Button>
               <Button onClick={() => {}} color="primary">
                 Speichern
@@ -243,7 +265,7 @@ class ProjectHome extends Component {
             </React.Fragment>
           }
         >
-          Hello World
+          Möchtest du deinen bisherigen Code als Projekt speichern?
         </Dialog>
       </div>
     );
