@@ -20,16 +20,18 @@ class BlocklyWindow extends Component {
 
   componentDidMount() {
     const workspace = Blockly.getMainWorkspace();
-    this.props.onChangeWorkspace({});
-    this.props.clearStats();
-    workspace.addChangeListener((event) => {
-      this.props.onChangeWorkspace(event);
-      // switch on that a block is displayed disabled or not depending on whether it is correctly connected
-      // for SVG display, a deactivated block in the display is undesirable
-      if (this.props.blockDisabled) {
-        Blockly.Events.disableOrphans(event);
-      }
-    });
+    if (!this.props.readOnly) {
+      this.props.onChangeWorkspace({});
+      this.props.clearStats();
+      workspace.addChangeListener((event) => {
+        this.props.onChangeWorkspace(event);
+        // switch on that a block is displayed disabled or not depending on whether it is correctly connected
+        // for SVG display, a deactivated block in the display is undesirable
+        if (this.props.blockDisabled) {
+          Blockly.Events.disableOrphans(event);
+        }
+      });
+    }
     Blockly.svgResize(workspace);
     const zoomToFit = new ZoomToFitControl(workspace);
     zoomToFit.init();
@@ -37,21 +39,23 @@ class BlocklyWindow extends Component {
 
   componentDidUpdate(props) {
     const workspace = Blockly.getMainWorkspace();
-    var xml = this.props.initialXml;
-    // if svg is true, then the update process is done in the BlocklySvg component
-    if (props.initialXml !== xml && !this.props.svg) {
-      // guarantees that the current xml-code (this.props.initialXml) is rendered
-      workspace.clear();
-      if (!xml) xml = initialXml;
-      Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), workspace);
-    }
-    if (props.language !== this.props.language) {
-      // change language
-      if (!xml) xml = initialXml;
-      var xmlDom = Blockly.Xml.textToDom(xml);
-      Blockly.Xml.clearWorkspaceAndLoadFromXml(xmlDom, workspace);
-      // var toolbox = workspace.getToolbox();
-      // workspace.updateToolbox(toolbox.toolboxDef_);
+    if (!this.props.readOnly) {
+      var xml = this.props.initialXml;
+      // if svg is true, then the update process is done in the BlocklySvg component
+      if (props.initialXml !== xml && !this.props.svg) {
+        // guarantees that the current xml-code (this.props.initialXml) is rendered
+        workspace.clear();
+        if (!xml) xml = initialXml;
+        Blockly.Xml.domToWorkspace(Blockly.Xml.textToDom(xml), workspace);
+      }
+      if (props.language !== this.props.language) {
+        // change language
+        if (!xml) xml = initialXml;
+        var xmlDom = Blockly.Xml.textToDom(xml);
+        Blockly.Xml.clearWorkspaceAndLoadFromXml(xmlDom, workspace);
+        // var toolbox = workspace.getToolbox();
+        // workspace.updateToolbox(toolbox.toolboxDef_);
+      }
     }
     Blockly.svgResize(workspace);
   }

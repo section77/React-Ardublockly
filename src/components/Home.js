@@ -77,7 +77,7 @@ class Home extends Component {
 
   componentWillUnmount() {
     this.props.clearStats();
-    this.props.workspaceName(null);
+    // this.props.workspaceName(null);
   }
 
   onChange = () => {
@@ -112,10 +112,17 @@ class Home extends Component {
             </Tooltip>
             <TrashcanButtons />
             <div className='blocklyWindow'>
-              {this.props.project ?
-                < BlocklyWindow blocklyCSS={{ height: '80vH' }} initialXml={this.props.project.xml} />
-                : < BlocklyWindow blocklyCSS={{ height: '80vH' }} />
-              }
+              {this.props.project ? (
+                  <BlocklyWindow
+                    blocklyCSS={{ height: "80vH" }}
+                    initialXml={this.props.project.xml}
+                  />
+                ) : (
+                <BlocklyWindow
+                  blocklyCSS={{ height: "80vH" }}
+                  initialXml={this.props.workspaceCode?.xml}
+                />
+              )}
             </div>
           </Grid>
           {this.state.codeOn ?
@@ -146,7 +153,8 @@ Home.propTypes = {
 
 const mapStateToProps = state => ({
   message: state.message,
-  statistics: state.general.statistics
+  statistics: state.general.statistics,
+  workspaceCode: state.workspace.code
 });
 
 

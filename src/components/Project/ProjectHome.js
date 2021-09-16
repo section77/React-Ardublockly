@@ -18,6 +18,8 @@ import Divider from "@material-ui/core/Divider";
 import Typography from "@material-ui/core/Typography";
 import Backdrop from "@material-ui/core/Backdrop";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import Dialog from "../Dialog";
+import Button from "@material-ui/core/Button";
 
 const styles = (theme) => ({
   link: {
@@ -36,6 +38,7 @@ class ProjectHome extends Component {
     type: "",
     key: "",
     message: "",
+    dialog: false,
   };
 
   componentDidMount() {
@@ -126,10 +129,24 @@ class ProjectHome extends Component {
                           overflow: "hidden",
                         }}
                       >
-                        <Link
-                          to={`/${
-                            data === "Projekte" ? "project" : "gallery"
-                          }/${project._id}`}
+                        <div
+                          onClick={() => {
+                            console.log(this.props.workspaceCode.arduino);
+                            const showDialog =
+                              this.props.workspaceCode.arduino !==
+                              "void setup() { } void loop() { } ";
+                            if (showDialog)
+                              this.setState({
+                                dialog: true,
+                              });
+                            else {
+                              this.props.history.push(
+                                `/${
+                                  data === "Projekte" ? "project" : "gallery"
+                                }/${project._id}`
+                              );
+                            }
+                          }}
                           style={{ textDecoration: "none", color: "inherit" }}
                         >
                           <h3 style={{ marginTop: 0 }}>{project.title}</h3>
@@ -139,6 +156,7 @@ class ProjectHome extends Component {
                           <BlocklyWindow
                             svg
                             blockDisabled
+                            readOnly
                             initialXml={project.xml}
                           />
                           <Typography
@@ -151,7 +169,7 @@ class ProjectHome extends Component {
                           >
                             {project.description}
                           </Typography>
-                        </Link>
+                        </div>
                         {this.props.user &&
                         this.props.user.email === project.creator ? (
                           <div>
@@ -206,6 +224,27 @@ class ProjectHome extends Component {
           type={this.state.type}
           key={this.state.key}
         />
+        <Dialog
+          open={this.state.dialog}
+          title="Achtung"
+          actions={
+            <React.Fragment>
+              <Button
+                onClick={() => {
+                  this.setState({ dialog: false });
+                }}
+                color="secondary"
+              >
+                Schließen
+              </Button>
+              <Button onClick={() => {}} color="primary">
+                Speichern
+              </Button>
+            </React.Fragment>
+          }
+        >
+          Hello World
+        </Dialog>
       </div>
     );
   }
@@ -226,6 +265,7 @@ const mapStateToProps = (state) => ({
   progress: state.project.progress,
   user: state.auth.user,
   message: state.message,
+  workspaceCode: state.workspace.code,
 });
 
 export default connect(mapStateToProps, {
