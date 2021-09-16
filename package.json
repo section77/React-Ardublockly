@@ -34,7 +34,8 @@
     "reactour": "^1.18.0",
     "redux": "^4.0.5",
     "redux-thunk": "^2.3.0",
-    "styled-components": "^4.4.1",
+    "rich-markdown-editor": "^11.17.7",
+    "styled-components": "^5.0.0",
     "uuid": "^8.3.1"
   },
   "scripts": {
